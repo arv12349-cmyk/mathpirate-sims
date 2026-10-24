@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="수학은 맛있어: 이차함수 평행이동과 극한값 존재 조건 시뮬레이션"><title>이차함수와 극한 - 수학은 맛있어</title></head><body style="margin:0;padding:14px;background:#fafbfe;">
+<!-- 수학은 맛있어 | 이차함수 평행이동 시뮬레이션 (티스토리 HTML 모드용) -->
+<div id="math15-sim" class="math15-sim">
+  <style>
+    #math15-sim { box-sizing:border-box; max-width:760px; margin:24px auto; padding:20px; background:#fff; color:#243044; border:1px solid #dce2ec; border-radius:18px; font-family:system-ui,-apple-system,'Noto Sans KR',sans-serif; box-shadow:0 5px 20px rgba(20,38,68,.06); }
+    #math15-sim * { box-sizing:border-box; }
+    #math15-sim .m-title { margin:0 0 6px; font-size:21px; font-weight:800; line-height:1.4; }
+    #math15-sim .m-sub { margin:0 0 14px; font-size:14px; color:#52617a; line-height:1.6; }
+    #math15-sim svg { display:block; width:100%; height:auto; background:#fafcff; border:1px solid #e9edf4; border-radius:12px; }
+    #math15-sim .m-legend { display:flex; flex-wrap:wrap; gap:10px 18px; margin:12px 0 16px; font-size:13px; }
+    #math15-sim .m-key { display:inline-flex; align-items:center; gap:7px; }
+    #math15-sim .m-key:before { content:''; display:inline-block; width:19px; height:4px; border-radius:3px; background:var(--line-color); }
+    #math15-sim .m-controls { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px; }
+    #math15-sim .m-controls label { font-size:16px; font-weight:700; white-space:nowrap; }
+    #math15-sim input[type=range] { flex:1 1 210px; min-width:120px; cursor:pointer; accent-color:#8857b9; }
+    #math15-sim .m-val { font-weight:800; min-width:48px; font-variant-numeric:tabular-nums; }
+    #math15-sim button { border:1px solid #cbd5e1; border-radius:9px; padding:8px 12px; background:white; color:#273449; cursor:pointer; font:inherit; font-size:13px; }
+    #math15-sim button:hover { background:#f3f6fc; }
+    #math15-sim button:focus-visible, #math15-sim input:focus-visible { outline:2px solid #5551bb; outline-offset:2px; }
+    #math15-sim .m-status { padding:12px 14px; border-radius:10px; background:#f5f3fb; line-height:1.7; font-size:14px; }
+    #math15-sim .m-status strong { color:#63399a; }
+    #math15-sim .m-foot { color:#66748a; font-size:12px; line-height:1.6; margin:10px 0 0; }
+    @media(max-width:520px){#math15-sim{padding:12px;}#math15-sim .m-title{font-size:17px;}#math15-sim .m-sub{font-size:12px;}#math15-sim .m-legend{font-size:11px;} }
+  </style>
+  <h3 class="m-title">두 이차함수의 합은 언제 x축에 접할까?</h3>
+  <p class="m-sub">파란색 <b>f(x)</b>는 고정되어 있고, 주황색 <b>f(x−t)</b>는 t만큼 오른쪽으로 움직입니다. 보라색은 두 함수의 합입니다.</p>
+  <svg id="math15-plot" viewBox="0 0 780 410" role="img" aria-label="슬라이더를 이용해 t에 따른 이차함수와 합의 변화를 비교하는 그래프">
+    <defs><clipPath id="math15-clip"><rect x="49" y="22" width="702" height="335"/></clipPath></defs>
+    <g id="math15-grid"></g>
+    <g clip-path="url(#math15-clip)" fill="none" stroke-linejoin="round" stroke-linecap="round">
+      <path id="math15-f" stroke="#3177bd" stroke-width="3"/>
+      <path id="math15-shift" stroke="#e29639" stroke-width="3"/>
+      <path id="math15-sum" stroke="#9853ae" stroke-width="4"/>
+    </g>
+    <g id="math15-markers"></g>
+    <text x="752" y="385" text-anchor="end" fill="#586779" font-size="13">x</text>
+    <text x="60" y="16" fill="#586779" font-size="13">y</text>
+  </svg>
+  <div class="m-legend">
+    <span class="m-key" style="--line-color:#3177bd">f(x) = (x+2)(x+½)</span>
+    <span class="m-key" style="--line-color:#e29639">f(x−t)</span>
+    <span class="m-key" style="--line-color:#9853ae">g(x) = f(x)+f(x−t)</span>
+  </div>
+  <div class="m-controls">
+    <label for="math15-t">이동 거리 t</label>
+    <input id="math15-t" type="range" min="0.1" max="2.8" step="0.05" value="1.5" aria-label="이동 거리 t"/>
+    <output id="math15-value" class="m-val" for="math15-t">1.50</output>
+    <button id="math15-play" type="button">▶ 자동 재생</button>
+    <button id="math15-reset" type="button">t = 1.5</button>
+  </div>
+  <div id="math15-status" class="m-status" aria-live="polite"></div>
+  <p class="m-foot">※ f(x) = (x+2)(x+½)인 정답 상황을 시각화했습니다. 실제로 t = 1.5에서 g(x) = 2(x+½)²가 됩니다.</p>
+</div>
+<script>
+(function(){
+  'use strict';
+  var host = document.getElementById('math15-sim');
+  if (!host || host.dataset.math15Ready === '1') return;
+  host.dataset.math15Ready = '1';
+  var svg = host.querySelector('#math15-plot');
+  var grid = host.querySelector('#math15-grid');
+  var marks = host.querySelector('#math15-markers');
+  var input = host.querySelector('#math15-t');
+  var value = host.querySelector('#math15-value');
+  var status = host.querySelector('#math15-status');
+  var playButton = host.querySelector('#math15-play');
+  var resetButton = host.querySelector('#math15-reset');
+  var NS = 'http://www.w3.org/2000/svg';
+  var L = 49, R = 751, TOP=22, BOTTOM=357, XMIN=-3.8, XMAX=3, YMIN=-3, YMAX=13;
+  var X = function(x){return L+(x-XMIN)/(XMAX-XMIN)*(R-L)};
+  var Y = function(y){return BOTTOM-(y-YMIN)/(YMAX-YMIN)*(BOTTOM-TOP)};
+  var f = function(x){return (x+2)*(x+0.5)};
+  function make(tag, attrs, parent, txt){
+    var e = document.createElementNS(NS, tag);
+    Object.keys(attrs).forEach(function(k){e.setAttribute(k,attrs[k])});
+    if(txt !== undefined)e.textContent=txt;
+    parent.appendChild(e);return e;
+  }
+  for(var xi=-3;xi<=3;xi++){
+    make('line',{x1:X(xi),y1:TOP,x2:X(xi),y2:BOTTOM,stroke:'#e7ecf3','stroke-width':1},grid);
+    make('text',{x:X(xi),y:BOTTOM+21,'text-anchor':'middle',fill:'#66748a','font-size':12},grid,String(xi));
+  }
+  for(var yi=-2;yi<=12;yi+=2){
+    make('line',{x1:L,y1:Y(yi),x2:R,y2:Y(yi),stroke:'#e7ecf3','stroke-width':1},grid);
+    if(yi!==0)make('text',{x:L-10,y:Y(yi)+4,'text-anchor':'end',fill:'#66748a','font-size':12},grid,String(yi));
+  }
+  make('line',{x1:L,y1:Y(0),x2:R,y2:Y(0),stroke:'#8793a4','stroke-width':1.7},grid);
+  make('line',{x1:X(0),y1:TOP,x2:X(0),y2:BOTTOM,stroke:'#8793a4','stroke-width':1.7},grid);
+  function path(fun){
+    var points=[];
+    for(var i=0;i<=340;i++){
+      var x=XMIN+(XMAX-XMIN)*i/340;
+      points.push((i?'L':'M')+X(x).toFixed(2)+' '+Y(fun(x)).toFixed(2));
+    }
+    return points.join(' ');
+  }
+  var raf=0, startTime=0;
+  function pause(){if(raf)cancelAnimationFrame(raf);raf=0;playButton.textContent='▶ 자동 재생';}
+  function update(){
+    var t=Number(input.value);
+    value.textContent=t.toFixed(2);
+    var g=function(x){return f(x)+f(x-t)};
+    host.querySelector('#math15-f').setAttribute('d',path(f));
+    host.querySelector('#math15-shift').setAttribute('d',path(function(x){return f(x-t)}));
+    host.querySelector('#math15-sum').setAttribute('d',path(g));
+    marks.textContent='';
+    var vertex=-1.25+t/2;
+    var min=(t*t-2.25)/2;
+    make('circle',{cx:X(vertex),cy:Y(min),r:5,fill:'#9853ae',stroke:'#ffffff','stroke-width':2},marks);
+    if(t<1.5-0.0001){
+      var delta=Math.sqrt(2.25-t*t)/2;
+      [vertex-delta,vertex+delta].forEach(function(x){make('circle',{cx:X(x),cy:Y(0),r:5.5,fill:'#9853ae',stroke:'#fff','stroke-width':2},marks)});
+      status.innerHTML='<strong>t &lt; 1.5: 분모가 서로 다른 두 실근을 가집니다.</strong><div>보라색 그래프가 x축과 두 점에서 만납니다. 이 두 곳에서 모두 극한값이 존재해야 하지만, 분자는 두 근을 동시에 상쇄하지 못합니다.</div>';
+    }else if(Math.abs(t-1.5)<0.0001){
+      make('text',{x:X(vertex)+10,y:Y(0)-14,fill:'#7a3e94','font-size':15,'font-weight':700},marks,'x = −½');
+      status.innerHTML='<strong>t = 1.5: 분모가 x축과 한 점에서 접합니다!</strong><div>g(x) = 2(x+½)²이고 접점은 x=−½입니다. 분자의 (2x+1) 인수 덕분에 극한값도 존재할 수 있습니다.</div>';
+    }else{
+      status.innerHTML='<strong>t &gt; 1.5: 분모가 0이 되지 않습니다.</strong><div>보라색 그래프가 x축 위에 있으므로 모든 실수 a에서 극한값이 존재합니다.</div>';
+    }
+  }
+  input.addEventListener('input',function(){pause();update()});
+  resetButton.addEventListener('click',function(){pause();input.value='1.5';update()});
+  playButton.addEventListener('click',function(){
+    if(raf){pause();return;}
+    var initial=Number(input.value);
+    startTime=performance.now();
+    playButton.textContent='Ⅱ 일시정지';
+    function frame(now){
+      var elapsed=(now-startTime)/1000;
+      var t=0.1+(elapsed%6)/6*2.7;
+      input.value=(Math.round(t*20)/20).toFixed(2);
+      update();
+      raf=requestAnimationFrame(frame);
+    }
+    raf=requestAnimationFrame(frame);
+  });
+  update();
+})();
+</script>
+
+</body></html>
