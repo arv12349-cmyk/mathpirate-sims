@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>수학은 맛있어 | 정적분의 차이와 절댓값 넓이 시뮬레이션</title>
+<style>
+:root{color-scheme:light;--ink:#1d2939;--muted:#667085;--navy:#183456;--sky:#0b81c6;--orange:#ea7038;--green:#178366;--line:#dbe3ec}
+*{box-sizing:border-box}body{margin:0;padding:14px;background:#fff;color:var(--ink);font-family:Pretendard,'Noto Sans KR','Malgun Gothic',system-ui,sans-serif;font-size:15px;line-height:1.65}
+.sim{border:1px solid var(--line);border-radius:16px;max-width:900px;margin:auto;background:#fff;overflow:hidden;box-shadow:0 6px 28px rgba(29,49,72,.045)}.top{padding:23px 24px 12px;background:linear-gradient(125deg,#f6faff,#fff 70%)}
+.tag{display:inline-block;font-size:11px;letter-spacing:.08em;color:#285c83;font-weight:800;background:#e9f3fc;border-radius:99px;padding:4px 10px}.top h1{font-size:clamp(18px,3vw,23px);line-height:1.4;margin:11px 0 7px;color:var(--navy);letter-spacing:-.04em}.top p{font-size:13px;margin:0;color:var(--muted)}
+.control{padding:14px 24px 7px}.controlhead{display:flex;align-items:center;justify-content:space-between;gap:8px}.controlhead strong{font-size:15px}.num{font-variant-numeric:tabular-nums;font-weight:800;font-size:19px;color:var(--navy)}
+input[type=range]{width:100%;margin:13px 0 5px;accent-color:var(--sky);cursor:pointer;height:23px}.rangeends{display:flex;justify-content:space-between;color:var(--muted);font-size:11px}.presets{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:10px}.presets button{background:#f5f8fc;border:1px solid #dbe5ee;border-radius:8px;padding:5px 12px;font-weight:600;font-size:12px;color:#304860;cursor:pointer}.presets button:hover,.presets button:focus-visible{background:#e3f0fa;outline:2px solid #accde4;outline-offset:1px}.graphbox{padding:0 8px 0 4px}.graph{display:block;width:100%;height:auto;aspect-ratio:800 / 430}
+.legend{display:flex;justify-content:center;gap:12px 20px;flex-wrap:wrap;padding:0px 14px 10px;color:#546579;font-size:12px}.swatch{display:inline-block;width:19px;height:4px;vertical-align:middle;margin-right:6px;border-radius:10px}.swatch.dotted{background:repeating-linear-gradient(to right,#94a3b8 0 6px, transparent 6px 10px)}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:12px 24px}.stat{border-radius:11px;border:1px solid #edf0f5;background:#f9fbfd;padding:12px 14px}.stat small{display:block;color:#6b7280;font-size:11px;margin-bottom:4px}.stat .value{font-size:21px;line-height:1.25;font-weight:800;font-variant-numeric:tabular-nums}.stat.positive .value{color:var(--green)}.stat.negative .value{color:var(--orange)}.stat.signed .value{color:var(--navy)}.stat.absolute .value{color:#0b81c6}
+.takeaway{margin:3px 24px 22px;background:#edf7ff;border-left:3px solid #1688d1;padding:12px 14px;border-radius:0 8px 8px 0;color:#284660;font-size:13px;line-height:1.65}.takeaway strong{color:#103956}.note{margin:0;padding:10px 24px 16px;background:#fbfcfd;border-top:1px solid #eef1f5;color:#718096;font-size:11px}
+@media(max-width:540px){body{padding:3px}.sim{border-radius:11px}.top{padding:16px 15px 9px}.control{padding:12px 15px 3px}.stats{padding:10px 13px}.stat{padding:10px}.stat .value{font-size:18px}.takeaway{margin:5px 13px 14px}.note{padding:10px 14px}.graph{aspect-ratio:800 / 465}}
+</style>
+</head>
+<body>
+<main class="sim">
+<section class="top">
+<span class="tag">직접 움직여 보는 수학</span>
+<h1>정적분의 값은 그대로인데, 넓이는 커질 수 있을까?</h1>
+<p>파란 직선의 기울기를 바꿔 보세요. 주황색과 초록색 영역이 동시에 커집니다.</p>
+</section>
+<section class="control" aria-label="기울기 조절">
+<div class="controlhead"><strong>직선의 기울기 <i>t</i></strong><output class="num" id="tValue" for="tSlider">4</output></div>
+<input id="tSlider" type="range" min="0" max="20" step="0.5" value="4" aria-label="h(x)=t(x-1)의 기울기 t">
+<div class="rangeends"><span>0 (원래 함수)</span><span>20</span></div>
+<div class="presets"><span style="font-size:12px;color:#667085;margin-right:2px">빠르게 보기</span><button type="button" data-t="0">t = 0</button><button type="button" data-t="2">t = 2</button><button type="button" data-t="8">t = 8</button><button type="button" data-t="16">t = 16</button></div>
+</section>
+<div class="graphbox">
+<svg id="graph" class="graph" viewBox="0 0 800 430" role="img" aria-labelledby="graphTitle graphDesc" preserveAspectRatio="xMidYMid meet">
+<title id="graphTitle">이차함수에 일차함수를 더할 때 생기는 그래프와 넓이 변화</title>
+<desc id="graphDesc">원래 함수 f(x)=6x(x-1), 직선 h(x)=t(x-1), 합성한 함수 f(x)+h(x)가 표시됩니다. 음수 부분 넓이는 주황색, 양수 부분은 초록색입니다.</desc>
+<g id="grid"></g><g id="areas"></g><g id="axes"></g>
+<path id="original" stroke="#94a3b8" stroke-width="2.5" stroke-dasharray="8 6" fill="none" stroke-linejoin="round"/>
+<path id="line" stroke="#0b81c6" stroke-width="2.6" fill="none" stroke-linejoin="round"/>
+<path id="sum" stroke="#168365" stroke-width="4.1" fill="none" stroke-linejoin="round"/>
+<circle id="root" r="5.5" fill="#fff" stroke="#168365" stroke-width="2.4"/>
+<g id="labels"></g>
+</svg>
+<div class="legend"><span><span class="swatch dotted"></span>원래 함수 f(x)</span><span><span class="swatch" style="background:#0b81c6"></span>더하는 직선 h(x)</span><span><span class="swatch" style="background:#168365"></span>합 f(x)+h(x)</span></div>
+</div>
+<div class="stats" aria-live="polite" aria-atomic="true">
+<div class="stat negative"><small>0부터 1까지 · 아래쪽 넓이 A</small><div class="value" id="neg">3</div></div>
+<div class="stat positive"><small>1부터 2까지 · 위쪽 넓이 B</small><div class="value" id="pos">7</div></div>
+<div class="stat signed"><small>정적분 · B − A</small><div class="value" id="signed">4</div></div>
+<div class="stat absolute"><small>절댓값 정적분 · A + B</small><div class="value" id="abs">10</div></div>
+</div>
+<div class="takeaway" id="takeaway"><strong>차이는 늘 4!</strong> 아래쪽과 위쪽 넓이는 각각 똑같이 증가하기 때문에 빼면 4이고, 더하면 6 + t가 됩니다.</div>
+<p class="note">계산에 쓰인 식: f(x)=6x(x−1), h(x)=t(x−1), f(x)+h(x)=(x−1)(6x+t). t ≥ 0일 때 아래쪽 넓이 1+t/2, 위쪽 넓이 5+t/2.</p>
+</main>
+<script>
+(() => {
+  'use strict';
+  const slider=document.getElementById('tSlider');
+  const byId=id=>document.getElementById(id);
+  const ns='http://www.w3.org/2000/svg';
+  const left=76,right=752,top=32,bottom=365;
+  const svgEl=(tag,attrs={},txt='')=>{let el=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,String(v));if(txt)el.textContent=txt;return el;};
+  const f=x=>6*x*(x-1);
+  const h=(x,t)=>t*(x-1);
+  const F=(x,t)=>f(x)+h(x,t);
+  const nice=v=>Number.isInteger(v)?String(v):v.toFixed(1);
+  const tickStep=range=>{const raw=range/5,p=Math.pow(10,Math.floor(Math.log10(raw)));return [1,2,5,10].find(m=>m*p>=raw)*p;};
+  const pathFor=(fun,x0,x1,X,Y,steps=160)=>{const a=[];for(let j=0;j<=steps;j++){const x=x0+(x1-x0)*j/steps;a.push(`${j===0?'M':'L'}${X(x).toFixed(2)},${Y(fun(x)).toFixed(2)}`);}return a.join(' ');};
+  function draw(){
+    const t=+slider.value;
+    byId('tValue').textContent=nice(t);
+    const vals=Array.from({length:201},(_,i)=>F(i/100,t));
+    const yMin=Math.min(-2,...vals)*1.12, yMax=Math.max(15,...vals)*1.10;
+    const X=x=>left+(right-left)*x/2;
+    const Y=y=>bottom-(y-yMin)/(yMax-yMin)*(bottom-top);
+    const grid=byId('grid'),axes=byId('axes'),areas=byId('areas'),labels=byId('labels');
+    [grid,axes,areas,labels].forEach(el=>el.replaceChildren());
+    const step=tickStep(yMax-yMin);
+    for(let v=Math.ceil(yMin/step)*step;v<=yMax+1e-8;v+=step){
+      const py=Y(v);grid.append(svgEl('line',{x1:left,y1:py,x2:right,y2:py,stroke:'#edf2f7','stroke-width':1}));
+      const tx=svgEl('text',{x:left-11,y:py+4,'text-anchor':'end',fill:'#8896a8','font-size':12},nice(Math.round(v*100)/100));labels.append(tx);
+    }
+    [0,0.5,1,1.5,2].forEach(x=>{const px=X(x);grid.append(svgEl('line',{x1:px,y1:top,x2:px,y2:bottom,stroke:'#f2f5f8','stroke-width':1}));labels.append(svgEl('text',{x:px,y:bottom+25,'text-anchor':'middle',fill:'#667085','font-size':13},nice(x)));});
+    const y0=Y(0);
+    areas.append(svgEl('path',{d:`M${X(0)},${y0} ${pathFor(x=>F(x,t),0,1,X,Y,140).replace(/^M/,'L')} L${X(1)},${y0} Z`,fill:'#ec793e','fill-opacity':'.22'}));
+    areas.append(svgEl('path',{d:`M${X(1)},${y0} ${pathFor(x=>F(x,t),1,2,X,Y,140).replace(/^M/,'L')} L${X(2)},${y0} Z`,fill:'#12a079','fill-opacity':'.20'}));
+    axes.append(svgEl('line',{x1:left,y1:y0,x2:right+12,y2:y0,stroke:'#657487','stroke-width':1.9}));
+    axes.append(svgEl('line',{x1:left,y1:top-12,x2:left,y2:bottom+4,stroke:'#657487','stroke-width':1.9}));
+    labels.append(svgEl('text',{x:right+19,y:y0+5,fill:'#657487','font-size':14},'x'));
+    labels.append(svgEl('text',{x:left-4,y:top-16,fill:'#657487','font-size':14},'y'));
+    byId('original').setAttribute('d',pathFor(f,0,2,X,Y));
+    byId('line').setAttribute('d',pathFor(x=>h(x,t),0,2,X,Y));
+    byId('sum').setAttribute('d',pathFor(x=>F(x,t),0,2,X,Y));
+    byId('root').setAttribute('cx',X(1));byId('root').setAttribute('cy',Y(0));
+    const negative=1+t/2,positive=5+t/2;
+    byId('neg').textContent=nice(negative);byId('pos').textContent=nice(positive);byId('signed').textContent='4';byId('abs').textContent=nice(6+t);
+    byId('takeaway').innerHTML=`<strong>차이는 언제나 4!</strong> A = 1 + ${nice(t)}/2, B = 5 + ${nice(t)}/2.<br><strong>B − A = 4</strong>는 그대로지만 <strong>A + B = ${nice(6+t)}</strong>로 늘어납니다. ${t===0?'지금은 원래 함수의 넓이입니다.':'t = '+nice(t)+'를 택하면 k = '+nice(6+t)+'를 얻습니다.'}`;
+  }
+  slider.addEventListener('input',draw);
+  document.querySelectorAll('[data-t]').forEach(btn=>btn.addEventListener('click',()=>{slider.value=btn.dataset.t;draw();slider.focus();}));
+  draw();
+})();
+</script>
+</body>
+</html>
