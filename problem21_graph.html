@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>수학은 맛있어 | 21번 미분 가능성 실험실</title>
+<style>
+:root{color-scheme:light;--ink:#17253c;--muted:#66758b;--line:#e2e8f0;--blue:#2563eb;--orange:#ea580c;--green:#079669;--purple:#64748b}*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--ink);font-family:system-ui,-apple-system,'Pretendard','Noto Sans KR',sans-serif;line-height:1.55}.shell{max-width:900px;margin:auto;padding:20px 19px 24px}.eyebrow{font-size:12px;letter-spacing:.08em;font-weight:800;color:#43618b}.title{font-size:clamp(19px,3.5vw,26px);font-weight:850;line-height:1.35;margin:5px 0 5px}.sub{font-size:13px;color:var(--muted);margin:0 0 17px}.group{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}.group-label{font-size:13px;font-weight:700;margin-right:5px}.switch,.preset{appearance:none;background:#fff;border:1px solid #cbd5e1;border-radius:10px;color:#334155;padding:9px 12px;font:inherit;font-size:13px;font-weight:650;cursor:pointer}.switch[aria-pressed=true]{border-color:var(--blue);background:#eff6ff;color:#1d4ed8}.switch:focus-visible,.preset:focus-visible,input:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}.sliderbox{border:1px solid var(--line);border-radius:13px;padding:12px 14px;margin-bottom:12px;background:#f8fafc}.slider-top{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:14px;font-weight:700}.slider-top output{font-variant-numeric:tabular-nums;color:#1d4ed8;font-size:18px}input[type=range]{width:100%;margin:12px 0 6px;accent-color:var(--blue)}.presets{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}.preset{padding:5px 9px;font-size:12px}.graph{width:100%;height:306px;display:block;border:1px solid var(--line);border-radius:12px;background:#fff}.legend{display:flex;gap:13px;flex-wrap:wrap;margin-top:10px;font-size:12px}.legend span{display:flex;align-items:center;gap:5px}.swatch{width:19px;height:3px;border-radius:2px;display:inline-block}.statrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}.stat{background:#f8fafc;border-radius:12px;border:1px solid var(--line);padding:12px 14px}.stat small{font-size:12px;color:var(--muted);display:block}.stat strong{font-size:22px;font-variant-numeric:tabular-nums}.status{border-left:4px solid #ea580c;background:#fff7ed;padding:12px 14px;border-radius:8px;margin-top:12px;font-size:13px}.status.ok{border-color:#059669;background:#ecfdf5}.equation{font-size:13px;font-variant-numeric:tabular-nums;line-height:1.9;margin-top:10px;color:#475569}.note{font-size:12px;color:var(--muted);margin-top:10px}.mono{font-family:ui-monospace,Consolas,monospace}.status b{color:#0f172a}@media(max-width:560px){.shell{padding:15px 12px}.graph{height:255px}.stat{padding:9px}.stat strong{font-size:18px}.legend{gap:9px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<main class="shell">
+<div class="eyebrow">수학은 맛있어 · 직접 움직여 보는 수학</div>
+<h1 class="title">두 개의 뾰족한 부분을 더하면?</h1>
+<p class="sub">중근 <b>r</b>을 움직여 두 함수의 기울기가 정확히 상쇄되는 순간을 찾아보세요. 아래 그래프는 단순근 <b>s</b> 주변을 보여줍니다.</p>
+<div class="group" role="group" aria-label="단순근 위치 선택"><span class="group-label">단순근 위치</span><button class="switch" id="case1" aria-pressed="true" type="button">s = 1</button><button class="switch" id="case3" aria-pressed="false" type="button">s = 3</button></div>
+<div class="sliderbox">
+  <div class="slider-top"><label for="rSlider">중근의 위치 r</label><output id="rVal" for="rSlider">0.50</output></div>
+  <input type="range" id="rSlider" min="-0.5" max="2.5" step="0.01" value="0.5" aria-label="중근 r 위치 조절" />
+  <div class="presets"><button class="preset" id="solutionA" type="button">정답 후보 A</button><button class="preset" id="solutionB" type="button">정답 후보 B</button><button class="preset" id="example" type="button">어긋나는 예시</button></div>
+</div>
+<canvas id="plot" class="graph" role="img" aria-label="g(x), 절댓값 Q(x), 두 함수의 합 h(x) 및 참고용 f(x)를 그린 그래프"></canvas>
+<div class="legend" aria-label="그래프 범례"><span><i class="swatch" style="background:#2563eb"></i>g(x)</span><span><i class="swatch" style="background:#ea580c"></i>|Q(x)|</span><span><i class="swatch" style="background:#059669;height:4px"></i>h(x)=합</span><span><i class="swatch" style="border-top:2px dashed #64748b;background:none"></i>f(x)</span></div>
+<div class="statrow">
+<div class="stat"><small>h의 왼쪽 미분계수</small><strong id="leftSlope">0.75</strong></div>
+<div class="stat"><small>h의 오른쪽 미분계수</small><strong id="rightSlope">0.75</strong></div>
+</div>
+<div class="status ok" id="status" aria-live="polite"></div>
+<div class="equation" id="formula"></div>
+<p class="note">두 기울기가 같을 때만 그래프가 x=s에서 매끄럽습니다. 중근과 단순근이 같아지면 (가)의 조건을 만족하지 않으므로 제외합니다. 실제 기울기는 함수의 좌·우 미분계수로 판정합니다.</p>
+</main>
+<script>
+(()=>{'use strict';
+const $=(id)=>document.getElementById(id);let s=1,r=.5;
+const plot=$('plot'),ctx=plot.getContext('2d');
+function Q(x){return s===1?(x-1)*(x-2)**2:(x-1)**2*(x-3)}
+function f(x){return (x-r)**2*(x-s)}
+function g(x){return f(x)>=0?-f(x):7*f(x)}
+function values(x){const fx=f(x),gx=g(x),absq=Math.abs(Q(x));return [fx,gx,absq,gx+absq]}
+function textNum(x){return (Math.abs(x)<0.000000001?0:x).toFixed(2)}
+function setCase(next){s=next;const [lo,hi]=s===1?[-.5,2.5]:[1.5,4.5];$('rSlider').min=lo;$('rSlider').max=hi;r=s===1?.5:2;$('rSlider').value=r;$('case1').setAttribute('aria-pressed',String(s===1));$('case3').setAttribute('aria-pressed',String(s===3));update()}
+function draw(){const scale=window.devicePixelRatio||1;const cssW=plot.clientWidth||720,cssH=plot.clientHeight||300;plot.width=Math.round(cssW*scale);plot.height=Math.round(cssH*scale);ctx.setTransform(scale,0,0,scale,0,0);ctx.clearRect(0,0,cssW,cssH);
+const left=44,right=12,top=12,bottom=26,pw=cssW-left-right,ph=cssH-top-bottom;
+const xMin=s-1.35,xMax=s+1.35;
+let ymax=1;for(let i=0;i<=300;i++){const v=values(xMin+(xMax-xMin)*i/300);for(const y of v)ymax=Math.max(ymax,Math.abs(y));}ymax*=1.13;
+const toX=x=>left+(x-xMin)/(xMax-xMin)*pw, toY=y=>top+(ymax-y)/(2*ymax)*ph;
+ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;for(let i=-2;i<=2;i++){let y=ymax*i/2;ctx.beginPath();ctx.moveTo(left,toY(y));ctx.lineTo(cssW-right,toY(y));ctx.stroke()}
+ctx.strokeStyle='#94a3b8';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(left,toY(0));ctx.lineTo(cssW-right,toY(0));ctx.stroke();
+for(let x=Math.ceil(xMin*2)/2;x<=xMax;x+=.5){ctx.fillStyle='#64748b';ctx.font='11px system-ui';ctx.textAlign='center';ctx.fillText(x.toFixed(x%1===0?0:1),toX(x),cssH-7)}
+ctx.save();ctx.setLineDash([4,4]);ctx.strokeStyle='#94a3b8';ctx.beginPath();ctx.moveTo(toX(s),top);ctx.lineTo(toX(s),cssH-bottom);ctx.stroke();ctx.restore();
+const colors=['#64748b','#2563eb','#ea580c','#059669'];for(let index=0;index<4;index++){ctx.save();ctx.lineWidth=index===3?3:2;ctx.lineJoin='round';ctx.strokeStyle=colors[index];if(index===0)ctx.setLineDash([5,4]);ctx.beginPath();for(let i=0;i<=550;i++){let x=xMin+(xMax-xMin)*i/550,y=values(x)[index],px=toX(x),py=toY(y);if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();ctx.restore()}
+ctx.fillStyle='#334155';ctx.font='bold 12px system-ui';ctx.textAlign='left';ctx.fillText('x = '+s,Math.min(cssW-53,toX(s)+7),top+14);
+ctx.beginPath();ctx.arc(toX(s),toY(0),4,0,2*Math.PI);ctx.fillStyle='#059669';ctx.fill();
+}
+function update(){r=Number($('rSlider').value);$('rVal').textContent=textNum(r);const m=(s-r)**2,d=s===1?1:4,L=7*m-d,R=-m+d,possible=Math.abs(r-s)>.0001,ok=possible&&Math.abs(L-R)<1e-7;
+$('leftSlope').textContent=textNum(L);$('rightSlope').textContent=textNum(R);
+$('status').className='status'+(ok?' ok':'');$('status').innerHTML=ok?'<b>✓ 정확히 상쇄됩니다!</b> 서로 다른 두 실근 조건도 충족하므로 h는 모든 실수에서 미분 가능합니다.':!possible?'<b>✕ 이 경우는 제외!</b> r = s이면 f는 삼중근 하나만 가져 (가)에 어긋납니다.':'<b>아직 꺾임이 남아 있습니다.</b> 중근 r을 움직여 좌우 기울기를 같게 만들어 보세요.';
+$('formula').innerHTML='<span class="mono">f(x)=(x−'+textNum(r)+')²(x−'+s+')</span><br><span class="mono">Q(x)='+ (s===1?'(x−1)(x−2)²':'(x−1)²(x−3)') +'</span><br><b>f(0) = '+textNum(-s*r*r)+'</b> &nbsp;·&nbsp; 기울기 일치 조건: <span class="mono">4(s−r)² = '+d+'</span>';
+draw()}
+$('case1').addEventListener('click',()=>setCase(1));$('case3').addEventListener('click',()=>setCase(3));$('rSlider').addEventListener('input',update);
+$('solutionA').addEventListener('click',()=>{$('rSlider').value=s===1?.5:2;update()});$('solutionB').addEventListener('click',()=>{$('rSlider').value=s===1?1.5:4;update()});$('example').addEventListener('click',()=>{$('rSlider').value=s===1?.8:2.8;update()});
+if(typeof ResizeObserver==='function'){new ResizeObserver(draw).observe(plot)}else{window.addEventListener('resize',draw)}setCase(1);
+})();
+</script>
+</body></html>
